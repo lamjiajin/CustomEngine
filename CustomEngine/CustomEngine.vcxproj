@@ -115,11 +115,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Input\Input.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Math\Matrix3x3.cpp" />
+    <ClCompile Include="Math\Matrix4x4.cpp" />
+    <ClCompile Include="Math\Quaternion.cpp" />
+    <ClCompile Include="Math\Vector2.cpp" />
+    <ClCompile Include="Math\Vector3.cpp" />
+    <ClCompile Include="Math\Vector4.cpp" />
     <ClCompile Include="Window\CustomWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Window\CustomWindow.hpp" />
+    <ClInclude Include="Input\Input.h" />
+    <ClInclude Include="Input\Keys.h" />
+    <ClInclude Include="Math\MathInc.h" />
+    <ClInclude Include="Math\Matrix3x3.h" />
+    <ClInclude Include="Math\Matrix4x4.h" />
+    <ClInclude Include="Math\Quaternion.h" />
+    <ClInclude Include="Math\Vector2.h" />
+    <ClInclude Include="Math\Vector3.h" />
+    <ClInclude Include="Math\Vector4.h" />
+    <ClInclude Include="Window\CustomWindow.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

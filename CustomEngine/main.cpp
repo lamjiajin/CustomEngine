@@ -1,5 +1,6 @@
 #include <iostream>
-#include "Window/CustomWindow.hpp"
+#include "Window/CustomWindow.h"
+#include "Input/Input.h"
 int main(void)
 {
 	std::cout << "hello world" << std::endl;
@@ -8,11 +9,13 @@ int main(void)
 	GetDesktopResolution(h, v);
 	std::cout << h << ", " << v << std::endl;
 	
-	mainWindow.init("FirstEngine");
+	mainWindow.init("FirstEngine",0,0,v/2,h/2);
 	//mainWindow.EnableDragNDrop();
+	input_mgr::active = true;
 	while (true)
 	{
 		mainWindow.Update(0.f);
+		input_mgr::Update();
 	}
 	return 1;
 }

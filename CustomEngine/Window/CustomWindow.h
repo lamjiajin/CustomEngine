@@ -25,6 +25,7 @@ class GameWindow
 {
 public:
 	static LRESULT CALLBACK StaticGameWindowHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	static GameWindow* GameWindowInstance;
 	LRESULT CALLBACK GameWindowHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	GameWindow() : m_fullscreen(false) {}
 

@@ -3,15 +3,15 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "CustomWindow.hpp"
-
+#include "CustomWindow.h"
+#include "../Input/Input.h"
 #define IDR_MENU 10000
 #define IDM_FILE 10001
 #define IDM_QUIT 10002
 
 /********************************* Globals **********************************/
 
-
+GameWindow* GameWindow::GameWindowInstance = nullptr;
 
 
 void GameWindow::init(const char* name, int X, int Y, int w, int h)
@@ -188,13 +188,13 @@ void GameWindow::init(const char* name, int X, int Y, int w, int h)
 	UpdateWindow(hwnd);
 	SetForegroundWindow(hwnd);
 	SetFocus(hwnd);
-
+	GameWindowInstance = this;
 }
 
 GameWindow* GetGameWindow()
 {
 	//return &gameWindow;
-	return nullptr;
+	return GameWindow::GameWindowInstance;
 }
 
 HWND GetHWND() { return GetGameWindow()->hwnd; }
@@ -360,7 +360,7 @@ void GameWindow::DisableDragNDrop()
 
 
 void window_move_WSAD_P_to_pause()
-{/*
+{
 	static bool pause = true;
 	if (input_mgr::IsTriggered(Key::P))
 	{
@@ -386,10 +386,10 @@ void window_move_WSAD_P_to_pause()
 	{
 		GetGameWindow()->MoveBy(10, 0);
 	}
-*/
+
 }
 void numpadeight_nine_setalpha()
-{/*
+{
 	if (input_mgr::IsHeld(VK_NUMPAD8))
 	{
 		GetGameWindow()->DecreaseAlpha();
@@ -397,7 +397,7 @@ void numpadeight_nine_setalpha()
 	if (input_mgr::IsHeld(VK_NUMPAD9))
 	{
 		GetGameWindow()->IncreaseAlpha();
-	}*/
+	}
 
 }
 
@@ -405,8 +405,8 @@ void numpadeight_nine_setalpha()
 
 void GameWindow::Update(float)
 {
-	//window_move_WSAD_P_to_pause();
-	//numpadeight_nine_setalpha();
+	window_move_WSAD_P_to_pause();
+	numpadeight_nine_setalpha();
 	while (PeekMessage(&Msg, NULL, NULL, NULL, PM_REMOVE))
 	{
 		if (Msg.message == WM_QUIT)   // do we receive a WM_QUIT message?
@@ -614,7 +614,7 @@ LRESULT CALLBACK GameWindow::GameWindowHandler(
 
 	case WM_MOUSEWHEEL:
 	{
-		//Keyboard::wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
+		Keyboard::wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam) / 120;
 		break;
 	}
 
@@ -693,14 +693,14 @@ LRESULT CALLBACK GameWindow::GameWindowHandler(
 
 	}
 
-	//case WM_KEYDOWN:
-	//	input_mgr::keyboardMouse.currentKeys[wParam] = 1;
+	case WM_KEYDOWN:
+		input_mgr::keyboardMouse.currentKeys[wParam] = 1;
 
 
 	//	break;
 
-	//case WM_KEYUP:
-	//	input_mgr::keyboardMouse.currentKeys[wParam]  = 0;
+	case WM_KEYUP:
+		input_mgr::keyboardMouse.currentKeys[wParam]  = 0;
 
 	//	break;
 
