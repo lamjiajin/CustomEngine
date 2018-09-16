@@ -76,7 +76,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>extern;</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>lib;</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -115,6 +119,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Graphics\camera.cpp" />
+    <ClCompile Include="Graphics\Graphics.cpp" />
+    <ClCompile Include="Graphics\mesh.cpp" />
+    <ClCompile Include="Graphics\object.cpp" />
     <ClCompile Include="Input\Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Matrix3x3.cpp" />
@@ -126,6 +134,11 @@
     <ClCompile Include="Window\CustomWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Graphics\camera.hpp" />
+    <ClInclude Include="Graphics\Graphics.h" />
+    <ClInclude Include="Graphics\graphics.hpp" />
+    <ClInclude Include="Graphics\mesh.hpp" />
+    <ClInclude Include="Graphics\object.hpp" />
     <ClInclude Include="Input\Input.h" />
     <ClInclude Include="Input\Keys.h" />
     <ClInclude Include="Math\MathInc.h" />

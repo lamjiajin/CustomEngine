@@ -405,8 +405,8 @@ void numpadeight_nine_setalpha()
 
 void GameWindow::Update(float)
 {
-	window_move_WSAD_P_to_pause();
-	numpadeight_nine_setalpha();
+	//window_move_WSAD_P_to_pause();
+	//numpadeight_nine_setalpha();
 	while (PeekMessage(&Msg, NULL, NULL, NULL, PM_REMOVE))
 	{
 		if (Msg.message == WM_QUIT)   // do we receive a WM_QUIT message?

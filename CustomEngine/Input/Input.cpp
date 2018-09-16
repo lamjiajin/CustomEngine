@@ -179,11 +179,7 @@ void Keyboard::Init()
 	}
 }
 
-void ReadKeyboard(char* keys)
-{
-	for (int x = 0; x < 256; x++)
-		keys[x] = (char)(GetAsyncKeyState(x) >> 8);
-}
+
 
 void Keyboard::Update()
 {
@@ -233,12 +229,13 @@ void Keyboard::Update()
 	//
 	//m_xPos = (int)(GET_X_LPARAM(lp) - (float)w / 2.0f);
 	//m_yPos = (int)-(GET_Y_LPARAM(lp) - (float)h / 2.0f);
-	//if (isHeld(VK_SPACE))
+
+	//if (IsHeld(VK_SPACE))
 	//	std::cout << "x: " << curr_mousePos.x << "y: " << curr_mousePos.y << std::endl;
 
 	std::copy(currentKeys, currentKeys + 256, prevKeys);
 	GetKeyboardState(currentKeys);
-	//ReadKeyboard(reinterpret_cast<char*>(currentKeys));
+	
 	int num;
 	int j = 0;
 	for (int i = 0; i < MAX_KEYS; ++i) // this loops through keyboard only
@@ -525,7 +522,7 @@ void input_mgr::Update()
 	Keyboard::wheelDelta = 0;
 
 	if (active)
-  {
+	{
 		keyboardMouse.Update();
 		//xboxController.Update();
 	}
