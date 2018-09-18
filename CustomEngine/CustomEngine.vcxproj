@@ -30,6 +30,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -76,10 +77,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>extern;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./extern;./;</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>lib;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,10 +121,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Graphics\camera.cpp" />
-    <ClCompile Include="Graphics\Graphics.cpp" />
-    <ClCompile Include="Graphics\mesh.cpp" />
-    <ClCompile Include="Graphics\object.cpp" />
+    <ClCompile Include="extern\gl\gl3w.c" />
+    <ClCompile Include="Graphics\opengl_3.cpp" />
+    <ClCompile Include="ImGUI\imgui.cpp" />
+    <ClCompile Include="ImGUI\imgui_demo.cpp" />
+    <ClCompile Include="ImGUI\imgui_draw.cpp" />
+    <ClCompile Include="ImGUI\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="ImGUI\imgui_impl_win32.cpp" />
     <ClCompile Include="Input\Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Math\Matrix3x3.cpp" />
@@ -134,11 +139,18 @@
     <ClCompile Include="Window\CustomWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Graphics\camera.hpp" />
-    <ClInclude Include="Graphics\Graphics.h" />
-    <ClInclude Include="Graphics\graphics.hpp" />
-    <ClInclude Include="Graphics\mesh.hpp" />
-    <ClInclude Include="Graphics\object.hpp" />
+    <ClInclude Include="extern\gl\gl3w.h" />
+    <ClInclude Include="glext\wglext.h" />
+    <ClInclude Include="ImGUI\imconfig.h" />
+    <ClInclude Include="ImGUI\imgui.h" />
+    <ClInclude Include="ImGUI\imgui_impl_opengl3.h" />
+    <ClInclude Include="ImGUI\imgui_impl_win32.h" />
+    <ClInclude Include="ImGUI\imgui_internal.h" />
+    <ClInclude Include="ImGUI\stb_rect_pack.h" />
+    <ClInclude Include="ImGUI\stb_textedit.h" />
+    <ClInclude Include="ImGUI\stb_truetype.h" />
+    <ClInclude Include="main.h" />
+    <ClInclude Include="Graphics\opengl_3.h" />
     <ClInclude Include="Input\Input.h" />
     <ClInclude Include="Input\Keys.h" />
     <ClInclude Include="Math\MathInc.h" />

@@ -1,7 +1,7 @@
 #ifndef __gl3w_h_
 #define __gl3w_h_
 
-#include "gl/glcorearb.h"
+#include <GL/glcorearb.h>
 
 #ifndef __gl_h_
 #define __gl_h_
@@ -543,18 +543,6 @@ extern PFNGLDEBUGMESSAGEINSERTARBPROC gl3wDebugMessageInsertARB;
 extern PFNGLDEBUGMESSAGECALLBACKARBPROC gl3wDebugMessageCallbackARB;
 extern PFNGLGETDEBUGMESSAGELOGARBPROC gl3wGetDebugMessageLogARB;
 extern PFNGLGETGRAPHICSRESETSTATUSARBPROC gl3wGetGraphicsResetStatusARB;
-extern PFNGLGETNMAPDVARBPROC gl3wGetnMapdvARB;
-extern PFNGLGETNMAPFVARBPROC gl3wGetnMapfvARB;
-extern PFNGLGETNMAPIVARBPROC gl3wGetnMapivARB;
-extern PFNGLGETNPIXELMAPFVARBPROC gl3wGetnPixelMapfvARB;
-extern PFNGLGETNPIXELMAPUIVARBPROC gl3wGetnPixelMapuivARB;
-extern PFNGLGETNPIXELMAPUSVARBPROC gl3wGetnPixelMapusvARB;
-extern PFNGLGETNPOLYGONSTIPPLEARBPROC gl3wGetnPolygonStippleARB;
-extern PFNGLGETNCOLORTABLEARBPROC gl3wGetnColorTableARB;
-extern PFNGLGETNCONVOLUTIONFILTERARBPROC gl3wGetnConvolutionFilterARB;
-extern PFNGLGETNSEPARABLEFILTERARBPROC gl3wGetnSeparableFilterARB;
-extern PFNGLGETNHISTOGRAMARBPROC gl3wGetnHistogramARB;
-extern PFNGLGETNMINMAXARBPROC gl3wGetnMinmaxARB;
 extern PFNGLGETNTEXIMAGEARBPROC gl3wGetnTexImageARB;
 extern PFNGLREADNPIXELSARBPROC gl3wReadnPixelsARB;
 extern PFNGLGETNCOMPRESSEDTEXIMAGEARBPROC gl3wGetnCompressedTexImageARB;
@@ -1160,18 +1148,6 @@ extern PFNGLTEXTURESTORAGE3DMULTISAMPLEEXTPROC gl3wTextureStorage3DMultisampleEX
 #define glDebugMessageCallbackARB		gl3wDebugMessageCallbackARB
 #define glGetDebugMessageLogARB		gl3wGetDebugMessageLogARB
 #define glGetGraphicsResetStatusARB		gl3wGetGraphicsResetStatusARB
-#define glGetnMapdvARB		gl3wGetnMapdvARB
-#define glGetnMapfvARB		gl3wGetnMapfvARB
-#define glGetnMapivARB		gl3wGetnMapivARB
-#define glGetnPixelMapfvARB		gl3wGetnPixelMapfvARB
-#define glGetnPixelMapuivARB		gl3wGetnPixelMapuivARB
-#define glGetnPixelMapusvARB		gl3wGetnPixelMapusvARB
-#define glGetnPolygonStippleARB		gl3wGetnPolygonStippleARB
-#define glGetnColorTableARB		gl3wGetnColorTableARB
-#define glGetnConvolutionFilterARB		gl3wGetnConvolutionFilterARB
-#define glGetnSeparableFilterARB		gl3wGetnSeparableFilterARB
-#define glGetnHistogramARB		gl3wGetnHistogramARB
-#define glGetnMinmaxARB		gl3wGetnMinmaxARB
 #define glGetnTexImageARB		gl3wGetnTexImageARB
 #define glReadnPixelsARB		gl3wReadnPixelsARB
 #define glGetnCompressedTexImageARB		gl3wGetnCompressedTexImageARB

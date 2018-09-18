@@ -6,7 +6,13 @@
 #include <functional>
 #include <Xinput.h>
 #include <vector>
-#include "../Math/MathInc.h"
+#include "Math/MathInc.h"
+
+#include <iostream>
+#include <algorithm>
+
+
+
 #define HIGH_BIT 0x80 // 10000000 
 #define LOW_BIT  0x01 // 00000001
 #if defined( _M_X64 )

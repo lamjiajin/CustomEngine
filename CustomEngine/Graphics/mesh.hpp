@@ -94,7 +94,7 @@ struct Mesh
 Mesh CreatePlane(int stacks, int slices);
 Mesh CreateCube(int length, int height, int width);
 Mesh CreateSphere(int stacks, int slices);
-Mesh LoadOBJMesh(char *filename);
+Mesh LoadOBJMesh(const char *filename);
 
 
 #endif

@@ -56,7 +56,8 @@ public:
 	bool activated = false;
 	bool paused = false;
 	HMENU   hMenu;
-	HDC       hDC;
+	HDC       hDC; // device context
+	HGLRC hRC; // rendering context
 	HMODULE hInstance;
 	HWND hwnd;
 	MSG Msg;

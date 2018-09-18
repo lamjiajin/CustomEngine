@@ -411,7 +411,7 @@ bool readDataLine(char *lineBuf, int *lineNum, FILE *fp, int MAX_LINE_LEN);
         The vertex index to be added.
 */
 /******************************************************************************/
-Mesh LoadOBJMesh(char *filename)
+Mesh LoadOBJMesh(const char *filename)
 {
     Mesh mesh;
 

@@ -1,11 +1,6 @@
+#include "Window/CustomWindow.h"
+#include "Input/Input.h"
 
-
-#include <iostream>
-#include <algorithm>
-#include <Windows.h>
-#include "Input.h"
-#include "../Window/CustomWindow.h"
-#include <algorithm>
 #define clamp(v, _min, _max) (max(min(v, _max), _min))
 
 #pragma comment(lib, "Xinput9_1_0.lib")
@@ -61,8 +56,8 @@ void Event::operator()(int i)
 void input_mgr::UnRegisterFunc(std::function<void()> ai_fn, ActionsFn action_enum, input_type type)
 {
 	auto& container = inputSystem.keyboard_actions_array[type][action_enum].key_state;
-	unsigned __int64 size = container.size();
-	for (unsigned __int64 i = 0; i < size; ++i)
+	auto size = container.size();
+	for (size_t i = 0; i < size; ++i)
 	{
 		int key = inputSystem.keyboard_actions_array[type][action_enum].key_state[i].first;
 		int state = inputSystem.keyboard_actions_array[type][action_enum].key_state[i].second;
@@ -75,8 +70,8 @@ void input_mgr::UnRegisterFunc(std::function<void()> ai_fn, ActionsFn action_enu
 void input_mgr::UnRegisterControllerFunc(std::function<void()> ai_fn, ActionsFn action_enum, input_type type)
 {
 	auto& container = inputSystem.controller_actions_array[type][action_enum].key_state;
-	unsigned __int64 size = container.size();
-	for (unsigned __int64 i = 0; i < size; ++i)
+	auto size = container.size();
+	for (size_t i = 0; i < size; ++i)
 	{
 		int key = inputSystem.controller_actions_array[type][action_enum].key_state[i].first;
 		int state = inputSystem.controller_actions_array[type][action_enum].key_state[i].second;
@@ -92,8 +87,8 @@ void input_mgr::RegisterFunc(std::function<void()> ai_fn, ActionsFn action_enum,
 	// ai_fn is the function that you want to bind.
 	auto& container = inputSystem.keyboard_actions_array[type][action_enum].key_state; // finding the keys that are registered to this action
 	
-	unsigned __int64 size = container.size();
-	for (unsigned __int64 i = 0; i < size; ++i) // going through each action and type, finding the right input_event_container element and assign the function ptr there
+	auto size = container.size();
+	for (size_t i = 0; i < size; ++i) // going through each action and type, finding the right input_event_container element and assign the function ptr there
 	{
 		int key = inputSystem.keyboard_actions_array[type][action_enum].key_state[i].first;
 		int state = inputSystem.keyboard_actions_array[type][action_enum].key_state[i].second;
@@ -108,8 +103,8 @@ void input_mgr::RegisterControllerFunc(std::function<void()> ai_fn, ActionsFn ac
 	// ai_fn is the function that you want to bind.
 	auto& container = inputSystem.controller_actions_array[type][action_enum].key_state; // finding the keys that are registered to this action
 
-	unsigned __int64 size = container.size();
-	for (unsigned __int64 i = 0; i < size; ++i) // going through each action and type, finding the right input_event_container element and assign the function ptr there
+	auto size = container.size();
+	for (size_t i = 0; i < size; ++i) // going through each action and type, finding the right input_event_container element and assign the function ptr there
 	{
 		int key = inputSystem.controller_actions_array[type][action_enum].key_state[i].first;
 		int state = inputSystem.controller_actions_array[type][action_enum].key_state[i].second;

@@ -4,7 +4,10 @@
 #include <vector>
 #include <iostream>
 #include "CustomWindow.h"
-#include "../Input/Input.h"
+#include "Input/Input.h"
+#include "gl/gl3w.h"
+#include "glext/wglext.h"
+#pragma comment (lib, "opengl32.lib")
 #define IDR_MENU 10000
 #define IDM_FILE 10001
 #define IDM_QUIT 10002
@@ -13,6 +16,14 @@
 
 GameWindow* GameWindow::GameWindowInstance = nullptr;
 
+static void Fatal(const char *msg, ...)
+{
+	va_list args;
+	va_start(args, msg);
+	vprintf(msg, args);
+	va_end(args);
+	ExitProcess(1);
+}
 
 void GameWindow::init(const char* name, int X, int Y, int w, int h)
 {
@@ -88,9 +99,9 @@ void GameWindow::init(const char* name, int X, int Y, int w, int h)
 	}
 	else
 	{
-		dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE | WS_EX_LAYERED;
-		dwStyle = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME  & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-	}
+		dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE; // this got bug with opengl | WS_EX_LAYERED;
+		dwStyle = WS_OVERLAPPEDWINDOW /*& ~WS_THICKFRAME*/  & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE; // ;to turn the window visible by default
+	} // thickframe is to remove resizing
 
 	// set up the window we're rendering to so that the top left corner is at (0,0)
 	// and the bottom right corner is (height,width)
@@ -106,6 +117,7 @@ void GameWindow::init(const char* name, int X, int Y, int w, int h)
 	//hMenu = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_MENU));
 
 	// class registered, so now create our window
+#if 1
 	hwnd = CreateWindowEx(dwExStyle,          // extended style
 		windowclassname,     // class name
 		name,                // app name
@@ -117,8 +129,11 @@ void GameWindow::init(const char* name, int X, int Y, int w, int h)
 		NULL,              // handle to menu, use NULL if not needed
 		hInstance,          // application instance
 		this);              // no extra params
-
-
+#else
+	hwnd =CreateWindowEx(0, windowclassname, "ImGui OpenGL3 Example",
+		WS_OVERLAPPEDWINDOW | WS_VISIBLE, 100, 100, 1280, 800,
+		0, 0, hInstance, this);
+#endif
 	opacity = 255;
 	SetLayeredWindowAttributes(hwnd, RGB(1, 55, 60), opacity, LWA_ALPHA | LWA_COLORKEY);
 
@@ -136,59 +151,129 @@ void GameWindow::init(const char* name, int X, int Y, int w, int h)
 
 
 	// set the pixel format we want
-	//PIXELFORMATDESCRIPTOR pfd = {
-	//	sizeof(PIXELFORMATDESCRIPTOR),  // size of structure
-	//	1,                              // default version
-	//	PFD_DRAW_TO_WINDOW |            // window drawing support
-	//	PFD_SUPPORT_OPENGL |            // OpenGL support
-	//	PFD_DOUBLEBUFFER,               // double buffering support
-	//	PFD_TYPE_RGBA,                  // RGBA color mode
-	//	32,                           // 32 bit color mode
-	//	0, 0, 0, 0, 0, 0,               // ignore color bits, non-palettized mode
-	//	0,                              // no alpha buffer
-	//	0,                              // ignore shift bit
-	//	0,                              // no accumulation buffer
-	//	0, 0, 0, 0,                     // ignore accumulation bits
-	//	16,                             // 16 bit z-buffer size
-	//	8,                              // no stencil buffer
-	//	0,                              // no auxiliary buffer
-	//	PFD_MAIN_PLANE,                 // main drawing plane
-	//	0,                              // reserved
-	//	0, 0, 0 };                      // layer masks ignored
+	PIXELFORMATDESCRIPTOR pfd = {
+		sizeof(PIXELFORMATDESCRIPTOR),  // size of structure
+		1,                              // default version
+		PFD_DRAW_TO_WINDOW |            // window drawing support
+		PFD_SUPPORT_OPENGL |            // OpenGL support
+		PFD_DOUBLEBUFFER,               // double buffering support
+		PFD_TYPE_RGBA,                  // RGBA color mode
+		32,                           // 32 bit color mode
+		0, 0, 0, 0, 0, 0,               // ignore color bits, non-palettized mode
+		0,                              // no alpha buffer
+		0,                              // ignore shift bit
+		0,                              // no accumulation buffer
+		0, 0, 0, 0,                     // ignore accumulation bits
+		24,                             // 16 bit z-buffer size
+		8,                              // no stencil buffer
+		0,                              // no auxiliary buffer
+		PFD_MAIN_PLANE,                 // main drawing plane
+		0,                              // reserved
+		0, 0, 0 };                      // layer masks ignored
 
-	//GLuint  pixelFormat;
+	int pixelFormat = ChoosePixelFormat(hDC, &pfd);
 
-	//// choose best matching pixel format
-	//if (!(pixelFormat = ChoosePixelFormat(hDC, &pfd)))
-	//{
-	//	MessageBox(NULL, "Can't find an appropriate pixel format", "Error", MB_OK | MB_ICONEXCLAMATION);
-	//}
+	// choose best matching pixel format
+	if (!pixelFormat)
+	{
+		MessageBox(NULL, "Can't find an appropriate pixel format", "Error", MB_OK | MB_ICONEXCLAMATION);
+	}
 
-	//// set pixel format to device context
-	//if (!SetPixelFormat(hDC, pixelFormat, &pfd))
-	//{
-	//	MessageBox(NULL, "Unable to set pixel format", "Error", MB_OK | MB_ICONEXCLAMATION);
-	//}
+	// set pixel format to device context
+	if (!SetPixelFormat(hDC, pixelFormat, &pfd))
+	{
+		MessageBox(NULL, "Unable to set pixel format", "Error", MB_OK | MB_ICONEXCLAMATION);
+	}
 
 
-	//// create the OpenGL rendering context
-	//if (!(hRC = wglCreateContext(hDC)))
-	//{
-	//	MessageBox(NULL, "Unable to create OpenGL rendering context", "Error", MB_OK | MB_ICONEXCLAMATION);
-	//}
+	// create the OpenGL rendering context
+	HGLRC legacyContext = wglCreateContext(hDC);
+	if (!legacyContext)
+	{
+		MessageBox(NULL, "Unable to create OpenGL rendering context", "Error", MB_OK | MB_ICONEXCLAMATION);
+	}
 
-	//// now make the rendering context the active one
-	//if (!wglMakeCurrent(hDC, hRC))
-	//{
-	//	MessageBox(NULL, "Unable to activate OpenGL rendering context", "ERROR", MB_OK | MB_ICONEXCLAMATION);
-	//}
+	// now make the rendering context the active one
+	if (!wglMakeCurrent(hDC, legacyContext))
+	{
+		MessageBox(NULL, "Unable to activate OpenGL rendering context (old)", "ERROR", MB_OK | MB_ICONEXCLAMATION);
+	}
+
+	int flags = WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
+#if DEBUG
+	flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
+#endif
+
+	const int contextAttributes[] =
+	{
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+		WGL_CONTEXT_MINOR_VERSION_ARB, 3,
+		WGL_CONTEXT_FLAGS_ARB, flags,
+		//WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+		0
+	};
+
+	PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB
+		= (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+
+
+	if (!wglCreateContextAttribsARB)
+	{
+		Fatal("ERROR: Failed querying entry point for wglCreateContextAttribsARB!");
+	}
+
+
+	hRC = wglCreateContextAttribsARB(hDC, 0, contextAttributes);
+	if (!hRC)
+	{
+		int error = glGetError();
+		Fatal("ERROR: Couldn't create rendering context! Error code is: %d", error);
+	}
+
+	// Destroy dummy context
+	BOOL res;
+	res = wglMakeCurrent(hDC, NULL);
+	res = wglDeleteContext(legacyContext);
+
+	if (!wglMakeCurrent(hDC, hRC))
+	{
+		int error = glGetError();
+		Fatal("ERROR: wglMakeCurrent failed with code %d", error);
+	}
+
+
+	// VSync
+	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT =
+		(PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
+
+	if (wglSwapIntervalEXT)
+	{
+		wglSwapIntervalEXT(1);
+	}
 
 	// show the window in the forground, and set the keyboard focus to it
-	ShowWindow(hwnd, SW_SHOW);
-	UpdateWindow(hwnd);
-	SetForegroundWindow(hwnd);
-	SetFocus(hwnd);
+	// not sure but don't need to do all these if WS_VISIBLE is set in window style?
+	//ShowWindow(hwnd, SW_SHOW);
+	//UpdateWindow(hwnd);
+	//SetForegroundWindow(hwnd);
+	//SetFocus(hwnd);
 	GameWindowInstance = this;
+
+	if (gl3wInit())
+	{
+		std::cerr << "Failed to initialize OpenGL.\n";
+		exit(1);
+	}
+
+	if (!gl3wIsSupported(3, 3))
+	{
+		std::cerr << "OpenGL 3.3 not supported.\n";
+		exit(1);
+	}
+
+	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << "\n";
+	std::cout << "GLSL version  : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 }
 
 GameWindow* GetGameWindow()
@@ -248,7 +333,7 @@ void GameWindow::switchscreen()
 	//	//dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
 
 	//	//dwStyle = WS_OVERLAPPEDWINDOW;
-	//	dwExStyle = WS_OVERLAPPEDWINDOW | WS_EX_WINDOWEDGE | WS_EX_LAYERED;
+	//	dwExStyle = WS_OVERLAPPEDWINDOW | WS_EX_WINDOWEDGE; // got bug lah! | WS_EX_LAYERED;
 	//	dwStyle = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME  & ~WS_MAXIMIZEBOX | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 
 	//	SetWindowLongPtr(hwnd, GWL_STYLE, dwStyle);
@@ -434,18 +519,18 @@ void GameWindow::KillWindow()
 	}
 	//
 	// if we have an RC, release it
-	//if (hRC)
-	//{
-	//	// release the RC
-	//	if (!wglMakeCurrent(NULL, NULL))
-	//		MessageBox(NULL, "Unable to release rendering context", "Error", MB_OK | MB_ICONINFORMATION);
+	if (hRC)
+	{
+		// release the RC
+		if (!wglMakeCurrent(NULL, NULL))
+			MessageBox(NULL, "Unable to release rendering context", "Error", MB_OK | MB_ICONINFORMATION);
 
-	//	// delete the RC
-	//	if (!wglDeleteContext(hRC))
-	//		MessageBox(NULL, "Unable to delete rendering context", "Error", MB_OK | MB_ICONINFORMATION);
+		// delete the RC
+		if (!wglDeleteContext(hRC))
+			MessageBox(NULL, "Unable to delete rendering context", "Error", MB_OK | MB_ICONINFORMATION);
 
-	//	hRC = NULL;
-	//}
+		hRC = NULL;
+	}
 
 	// release the DC if we have one
 	if (hDC && !ReleaseDC(hwnd, hDC))
@@ -494,9 +579,13 @@ void StorePathToVec(const std::string str, std::vector<std::string>& vec)
 	//}
 }
 
+extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT CALLBACK GameWindow::StaticGameWindowHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
+		return true;
+
 	GameWindow* pParent;
 	//ImGui_ImplDX11_WndProcHandler(hWnd, uMsg, wParam, lParam);
 	// Get pointer to window
@@ -676,12 +765,11 @@ LRESULT CALLBACK GameWindow::GameWindowHandler(
 		RECT  temp = *((RECT*)lParam);
 		m_width = temp.right - temp.left;
 		m_height = temp.bottom - temp.top;
-		return 0;
+		return 1;
 	}
 
 	case WM_SIZE:
 	{
-		break;
 		if (wParam == 0)
 		{
 			auto width = LOWORD(lParam);
@@ -727,9 +815,6 @@ LRESULT CALLBACK GameWindow::GameWindowHandler(
 	default:
 		break;
 	}
-
-
-
 
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }

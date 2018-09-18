@@ -1,8 +1,12 @@
-#include "gl/gl3w.h"
+#include <GL/gl3w.h>
+
+#ifdef _MSC_VER
+#pragma warning (disable: 4055) // warning C4055: 'type cast' : from data pointer 'void *' to function pointer
+#pragma warning (disable: 4152) // warning C4152: nonstandard extension, function/data pointer conversion in expression
+#endif
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
-
 #include <windows.h>
 
 static HMODULE libgl;
@@ -26,7 +30,7 @@ static void *get_proc(const char *proc)
 		res = GetProcAddress(libgl, proc);
 	return res;
 }
-#elif defined(APPLE) || defined(APPLE_CC)
+#elif defined(__APPLE__) || defined(__APPLE_CC__)
 #include <Carbon/Carbon.h>
 
 CFBundleRef bundle;
@@ -78,7 +82,7 @@ static void *get_proc(const char *proc)
 {
 	void *res;
 
-	res = glXGetProcAddress((const GLubyte *) proc);
+	res = (void*)glXGetProcAddress((const GLubyte *) proc);
 	if (!res)
 		res = dlsym(libgl, proc);
 	return res;
@@ -555,9 +559,9 @@ PFNGLPAUSETRANSFORMFEEDBACKPROC gl3wPauseTransformFeedback;
 PFNGLRESUMETRANSFORMFEEDBACKPROC gl3wResumeTransformFeedback;
 PFNGLDRAWTRANSFORMFEEDBACKPROC gl3wDrawTransformFeedback;
 PFNGLDRAWTRANSFORMFEEDBACKSTREAMPROC gl3wDrawTransformFeedbackStream;
-PFNGLBEGINQUERYINDEXEDPROC gl3wBeginQuerYINDEXed;
-PFNGLENDQUERYINDEXEDPROC gl3wEndQuerYINDEXed;
-PFNGLGETQUERYINDEXEDIVPROC gl3wGetQuerYINDEXediv;
+PFNGLBEGINQUERYINDEXEDPROC gl3wBeginQueryIndexed;
+PFNGLENDQUERYINDEXEDPROC gl3wEndQueryIndexed;
+PFNGLGETQUERYINDEXEDIVPROC gl3wGetQueryIndexediv;
 PFNGLRELEASESHADERCOMPILERPROC gl3wReleaseShaderCompiler;
 PFNGLSHADERBINARYPROC gl3wShaderBinary;
 PFNGLGETSHADERPRECISIONFORMATPROC gl3wGetShaderPrecisionFormat;
@@ -652,18 +656,6 @@ PFNGLDEBUGMESSAGEINSERTARBPROC gl3wDebugMessageInsertARB;
 PFNGLDEBUGMESSAGECALLBACKARBPROC gl3wDebugMessageCallbackARB;
 PFNGLGETDEBUGMESSAGELOGARBPROC gl3wGetDebugMessageLogARB;
 PFNGLGETGRAPHICSRESETSTATUSARBPROC gl3wGetGraphicsResetStatusARB;
-PFNGLGETNMAPDVARBPROC gl3wGetnMapdvARB;
-PFNGLGETNMAPFVARBPROC gl3wGetnMapfvARB;
-PFNGLGETNMAPIVARBPROC gl3wGetnMapivARB;
-PFNGLGETNPIXELMAPFVARBPROC gl3wGetnPixelMapfvARB;
-PFNGLGETNPIXELMAPUIVARBPROC gl3wGetnPixelMapuivARB;
-PFNGLGETNPIXELMAPUSVARBPROC gl3wGetnPixelMapusvARB;
-PFNGLGETNPOLYGONSTIPPLEARBPROC gl3wGetnPolygonStippleARB;
-PFNGLGETNCOLORTABLEARBPROC gl3wGetnColorTableARB;
-PFNGLGETNCONVOLUTIONFILTERARBPROC gl3wGetnConvolutionFilterARB;
-PFNGLGETNSEPARABLEFILTERARBPROC gl3wGetnSeparableFilterARB;
-PFNGLGETNHISTOGRAMARBPROC gl3wGetnHistogramARB;
-PFNGLGETNMINMAXARBPROC gl3wGetnMinmaxARB;
 PFNGLGETNTEXIMAGEARBPROC gl3wGetnTexImageARB;
 PFNGLREADNPIXELSARBPROC gl3wReadnPixelsARB;
 PFNGLGETNCOMPRESSEDTEXIMAGEARBPROC gl3wGetnCompressedTexImageARB;
@@ -1174,9 +1166,9 @@ static void load_procs(void)
 	gl3wResumeTransformFeedback = (PFNGLRESUMETRANSFORMFEEDBACKPROC) get_proc("glResumeTransformFeedback");
 	gl3wDrawTransformFeedback = (PFNGLDRAWTRANSFORMFEEDBACKPROC) get_proc("glDrawTransformFeedback");
 	gl3wDrawTransformFeedbackStream = (PFNGLDRAWTRANSFORMFEEDBACKSTREAMPROC) get_proc("glDrawTransformFeedbackStream");
-	gl3wBeginQuerYINDEXed = (PFNGLBEGINQUERYINDEXEDPROC) get_proc("glBeginQuerYINDEXed");
-	gl3wEndQuerYINDEXed = (PFNGLENDQUERYINDEXEDPROC) get_proc("glEndQuerYINDEXed");
-	gl3wGetQuerYINDEXediv = (PFNGLGETQUERYINDEXEDIVPROC) get_proc("glGetQuerYINDEXediv");
+	gl3wBeginQueryIndexed = (PFNGLBEGINQUERYINDEXEDPROC) get_proc("glBeginQueryIndexed");
+	gl3wEndQueryIndexed = (PFNGLENDQUERYINDEXEDPROC) get_proc("glEndQueryIndexed");
+	gl3wGetQueryIndexediv = (PFNGLGETQUERYINDEXEDIVPROC) get_proc("glGetQueryIndexediv");
 	gl3wReleaseShaderCompiler = (PFNGLRELEASESHADERCOMPILERPROC) get_proc("glReleaseShaderCompiler");
 	gl3wShaderBinary = (PFNGLSHADERBINARYPROC) get_proc("glShaderBinary");
 	gl3wGetShaderPrecisionFormat = (PFNGLGETSHADERPRECISIONFORMATPROC) get_proc("glGetShaderPrecisionFormat");
@@ -1271,18 +1263,6 @@ static void load_procs(void)
 	gl3wDebugMessageCallbackARB = (PFNGLDEBUGMESSAGECALLBACKARBPROC) get_proc("glDebugMessageCallbackARB");
 	gl3wGetDebugMessageLogARB = (PFNGLGETDEBUGMESSAGELOGARBPROC) get_proc("glGetDebugMessageLogARB");
 	gl3wGetGraphicsResetStatusARB = (PFNGLGETGRAPHICSRESETSTATUSARBPROC) get_proc("glGetGraphicsResetStatusARB");
-	gl3wGetnMapdvARB = (PFNGLGETNMAPDVARBPROC) get_proc("glGetnMapdvARB");
-	gl3wGetnMapfvARB = (PFNGLGETNMAPFVARBPROC) get_proc("glGetnMapfvARB");
-	gl3wGetnMapivARB = (PFNGLGETNMAPIVARBPROC) get_proc("glGetnMapivARB");
-	gl3wGetnPixelMapfvARB = (PFNGLGETNPIXELMAPFVARBPROC) get_proc("glGetnPixelMapfvARB");
-	gl3wGetnPixelMapuivARB = (PFNGLGETNPIXELMAPUIVARBPROC) get_proc("glGetnPixelMapuivARB");
-	gl3wGetnPixelMapusvARB = (PFNGLGETNPIXELMAPUSVARBPROC) get_proc("glGetnPixelMapusvARB");
-	gl3wGetnPolygonStippleARB = (PFNGLGETNPOLYGONSTIPPLEARBPROC) get_proc("glGetnPolygonStippleARB");
-	gl3wGetnColorTableARB = (PFNGLGETNCOLORTABLEARBPROC) get_proc("glGetnColorTableARB");
-	gl3wGetnConvolutionFilterARB = (PFNGLGETNCONVOLUTIONFILTERARBPROC) get_proc("glGetnConvolutionFilterARB");
-	gl3wGetnSeparableFilterARB = (PFNGLGETNSEPARABLEFILTERARBPROC) get_proc("glGetnSeparableFilterARB");
-	gl3wGetnHistogramARB = (PFNGLGETNHISTOGRAMARBPROC) get_proc("glGetnHistogramARB");
-	gl3wGetnMinmaxARB = (PFNGLGETNMINMAXARBPROC) get_proc("glGetnMinmaxARB");
 	gl3wGetnTexImageARB = (PFNGLGETNTEXIMAGEARBPROC) get_proc("glGetnTexImageARB");
 	gl3wReadnPixelsARB = (PFNGLREADNPIXELSARBPROC) get_proc("glReadnPixelsARB");
 	gl3wGetnCompressedTexImageARB = (PFNGLGETNCOMPRESSEDTEXIMAGEARBPROC) get_proc("glGetnCompressedTexImageARB");
