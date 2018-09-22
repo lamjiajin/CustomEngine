@@ -8,6 +8,63 @@
 #include "imGUI/imgui_impl_win32.h"
 #include "imGUI/imgui_impl_opengl3.h"
 
+mat3 global_to_clip{1.f/40.f,0,0,1.f /40.f,0,0,0,0,1};
+
+struct square
+{
+	// vbo index - 
+	int vbo_index; 
+	float length = 1;
+	vec2 position{ 0,0 };
+	void init_color(std::vector<float>& color_data, vec3 color)
+	{
+		
+		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
+		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
+		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
+
+		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
+		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
+		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
+
+	}
+
+	void init_graphics(std::vector<float>& point_data)
+	{
+		vbo_index = point_data.size();
+		float i = position.x / 20.f, j = position.y / 20.f;
+		float clip_length = length / 20.f;
+		point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
+		point_data.push_back(i + clip_length); point_data.push_back(j); point_data.push_back(0);
+		point_data.push_back(i + clip_length); point_data.push_back(j + clip_length); point_data.push_back(0);
+
+		point_data.push_back(i + clip_length); point_data.push_back(j + clip_length); point_data.push_back(0);
+		point_data.push_back(i); point_data.push_back(j + clip_length); point_data.push_back(0);
+		point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
+	}
+	void update_graphics(GLuint vbo)
+	{
+		float i = position.x / 20.f ;
+		float j = position.y / 20.f ;
+		float clip_length = length / 20.f;
+
+		float clip_data[18]{
+
+		i, j, 0,
+		i + clip_length, j, 0,
+		i + clip_length, j + clip_length, 0,
+
+		i + clip_length, j + clip_length, 0,
+		i, j + clip_length, 0,
+		i, j, 0,
+		};
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferSubData(GL_ARRAY_BUFFER, vbo_index * sizeof(float),18* sizeof(float), clip_data);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+};
+
 int main(void)
 {
 	GameWindow mainWindow;	
@@ -44,54 +101,104 @@ int main(void)
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	std::vector<float> point_data;
-
-	for (float j = -0.75f; j < 0.75f; j += 0.25f)
+	std::vector<float> color_data;
+	
+	// static background
+	std::vector<square> arena;
 	{
-		for (float i = -0.75f; i < 0.75f; i += 0.25f)
+		for (int i = 0; i < 20; i++)
 		{
-			point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
-			point_data.push_back(i + 0.25f); point_data.push_back(j); point_data.push_back(0);
-			point_data.push_back(i + 0.25f); point_data.push_back(j + 0.25f); point_data.push_back(0);
+			square mysq;
+			mysq.position.x = i * 2 - 20;
+			mysq.position.y = -20;
+			mysq.length = 2;
+			mysq.init_graphics(point_data);
+			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
+			arena.push_back(mysq);
+		}
 
-			point_data.push_back(i + 0.25f); point_data.push_back(j + 0.25f); point_data.push_back(0);
-			point_data.push_back(i); point_data.push_back(j + 0.25f); point_data.push_back(0);
-			point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
+		for (int i = 0; i < 20; i++)
+		{
+			square mysq;
+			mysq.position.x = i * 2 - 20;
+			mysq.position.y = 18;
+			mysq.length = 2;
+			mysq.init_graphics(point_data);
+			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
+			arena.push_back(mysq);
+		}
+
+		for (int i = 1; i < 19; i++)
+		{
+			square mysq;
+			mysq.position.x = -20;
+			mysq.position.y = i * 2 - 20;
+			mysq.length = 2;
+			mysq.init_graphics(point_data);
+			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
+			arena.push_back(mysq);
+		}
+		for (int i = 1; i < 19; i++)
+		{
+			square mysq;
+			mysq.position.x = 18;
+			mysq.position.y = i * 2 - 20;
+			mysq.length = 2;
+			mysq.init_graphics(point_data);
+			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
+			arena.push_back(mysq);
 		}
 
 	}
-	int num = point_data.size() / 3;
-	float points[] = {
-		0.0f,  0.0f,  0.0f,
-		0.25f, 0.0f,  0.0f,
-		0.0f, 0.25f,  0.0f,
 
-		0.5f,  0.0f,  0.0f,
-		0.75f, 0.0f,  0.0f,
-		0.5f,  0.25f,  0.0f
-	};
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	// units
+	square herosq;
+	herosq.length = 3;
+	herosq.init_graphics(point_data);
+	herosq.init_color(color_data, vec3{ 0.7f,0.1f,0.2f });
+
+
+
+
+	int num = point_data.size() / 3;
+
+	GLuint pos_vbo = 0;
+	glGenBuffers(1, &pos_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
 	glBufferData(GL_ARRAY_BUFFER, point_data.size()*sizeof(float), point_data.data(), GL_STATIC_DRAW);
+
+	GLuint colours_vbo = 0;
+	glGenBuffers(1, &colours_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
+	glBufferData(GL_ARRAY_BUFFER, color_data.size() * sizeof(float), color_data.data(), GL_STATIC_DRAW);
+
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL); 
+	glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
 	const char* vertex_shader =
 		"#version 400\n"
-		"in vec3 vp;"
+		"layout(location = 0) in vec3 vp;"
+		"layout(location = 1) in vec3 vertex_colour;"
+		"out vec3 colour;"
 		"void main() {"
+		"  colour = vertex_colour;"
 		"  gl_Position = vec4(vp, 1.0);"
 		"}";
 	const char* fragment_shader =
 		"#version 400\n"
+		"in vec3 colour;"
 		"out vec4 frag_colour;"
 		"void main() {"
-		"  frag_colour = vec4(0.5, 0.0, 0.5, 1.0);"
+		"  frag_colour = vec4(colour, 1.0);"
 		"}";
+
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vs, 1, &vertex_shader, NULL);
 	glCompileShader(vs);
@@ -101,107 +208,102 @@ int main(void)
 	GLuint shader_programme = glCreateProgram();
 	glAttachShader(shader_programme, fs);
 	glAttachShader(shader_programme, vs);
+	// insert location binding code here
+	glBindAttribLocation(shader_programme, 0, "vp");
+	glBindAttribLocation(shader_programme, 1, "vertex_colour");
 	glLinkProgram(shader_programme);
 	while (true)
 	{
 		mainWindow.Update(0.f);
 		input_mgr::Update();
 
-		// Start the ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-		// 1. Show a simple window.
-		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
-		{
-			static float f = 0.0f;
-			static int counter = 0;
-			ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
-			ImGui::Checkbox("Another Window", &show_another_window);
-
-			if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-				counter++;
-			ImGui::SameLine();
-			ImGui::Text("counter = %d", counter);
-
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		}
-
-		// 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-		if (show_another_window)
-		{
-			ImGui::Begin("Another Window", &show_another_window);
-			ImGui::Text("Hello from another window!");
-			if (ImGui::Button("Close Me"))
-				show_another_window = false;
-			ImGui::End();
-		}
-
-		// 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-		if (show_demo_window)
-		{
-			ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-			ImGui::ShowDemoWindow(&show_demo_window);
-		}
-
-		// Rendering
-
-
-
-		ImGui::Render();
 		glViewport(0, 0, mainWindow.m_width, mainWindow.m_height);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		/* graphics draw here */
-		if (input_mgr::IsHeld('K'))
-		{
-			//float points[] = {
-			//	0.5f,  0.0f,  0.0f,
-			//	0.75f, 0.0f,  0.0f,
-			//	0.5f,  0.25f,  0.0f,
 
-			//	0.0f,  0.0f,  0.0f,
-			//	0.0f,  0.0f,  0.0f,
-			//	0.0f,  0.0f,  0.0f
-			//};
-			//glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			//glBufferSubData(GL_ARRAY_BUFFER, 0,18 * sizeof(float), points);
-			//glBindBuffer(GL_ARRAY_BUFFER, 0);
-			num--;
-		}
+		if (input_mgr::IsHeld(Key::W))
+			herosq.position.y++;
+		if (input_mgr::IsHeld(Key::A))
+			herosq.position.x--;
+		if (input_mgr::IsHeld(Key::S))
+			herosq.position.y--;
+		if (input_mgr::IsHeld(Key::D))
+			herosq.position.x++;
 
-		if (input_mgr::IsHeld('L'))
-		{
 
-			//float points[] = {
-			//	0.0f,  0.0f,  0.0f,
-			//	0.25f, 0.0f,  0.0f,
-			//	0.0f, 0.25f,  0.0f,
+		herosq.update_graphics(pos_vbo);
 
-			//	0.5f,  0.0f,  0.0f,
-			//	0.75f, 0.0f,  0.0f,
-			//	0.5f,  0.25f,  0.0f
-			//};
-			//glBindBuffer(GL_ARRAY_BUFFER, vbo);
-			//glBufferSubData(GL_ARRAY_BUFFER, 0* sizeof(float),18* sizeof(float), points);
-			//glBindBuffer(GL_ARRAY_BUFFER, 0);
-			num++;
-		}
 		glUseProgram(shader_programme);
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, num);
 
-		/* imgui draw here */
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
 
 
+
+		static bool imgui_active = true;
+		if (input_mgr::IsTriggered(Key::BACKQUOTE))
+		{
+			imgui_active = !imgui_active;
+		}
+		if (imgui_active)
+		{
+			// Start the ImGui frame
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
+			// 1. Show a simple window.
+			// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
+			{
+				static float f = 0.0f;
+				static int counter = 0;
+				ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+				ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+				ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
+				ImGui::Checkbox("Another Window", &show_another_window);
+
+				if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+					counter++;
+				ImGui::SameLine();
+				ImGui::Text("counter = %d", counter);
+
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			}
+
+			// 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
+			if (show_another_window)
+			{
+				ImGui::Begin("Another Window", &show_another_window);
+				ImGui::Text("Hello from another window!");
+				if (ImGui::Button("Close Me"))
+					show_another_window = false;
+				ImGui::End();
+			}
+
+			// 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
+			if (show_demo_window)
+			{
+				ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
+				ImGui::ShowDemoWindow(&show_demo_window);
+			}
+
+			// Rendering
+
+
+
+			ImGui::Render();
+
+
+			/* imgui draw here */
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		}
+		
 		SwapBuffers(mainWindow.hDC);
 	}
 	// Cleanup
