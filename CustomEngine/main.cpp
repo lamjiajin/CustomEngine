@@ -1,5 +1,5 @@
-#include <iostream>
-
+﻿#include <iostream>
+#include <vector>
 #include "Window/CustomWindow.h"
 #include "Input/Input.h"
 #include "gl/gl3w.h"
@@ -42,6 +42,66 @@ int main(void)
 	bool show_demo_window = true;
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+	std::vector<float> point_data;
+
+	for (float j = -0.75f; j < 0.75f; j += 0.25f)
+	{
+		for (float i = -0.75f; i < 0.75f; i += 0.25f)
+		{
+			point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
+			point_data.push_back(i + 0.25f); point_data.push_back(j); point_data.push_back(0);
+			point_data.push_back(i + 0.25f); point_data.push_back(j + 0.25f); point_data.push_back(0);
+
+			point_data.push_back(i + 0.25f); point_data.push_back(j + 0.25f); point_data.push_back(0);
+			point_data.push_back(i); point_data.push_back(j + 0.25f); point_data.push_back(0);
+			point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
+		}
+
+	}
+	int num = point_data.size() / 3;
+	float points[] = {
+		0.0f,  0.0f,  0.0f,
+		0.25f, 0.0f,  0.0f,
+		0.0f, 0.25f,  0.0f,
+
+		0.5f,  0.0f,  0.0f,
+		0.75f, 0.0f,  0.0f,
+		0.5f,  0.25f,  0.0f
+	};
+	GLuint vbo = 0;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, point_data.size()*sizeof(float), point_data.data(), GL_STATIC_DRAW);
+	GLuint vao = 0;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+	const char* vertex_shader =
+		"#version 400\n"
+		"in vec3 vp;"
+		"void main() {"
+		"  gl_Position = vec4(vp, 1.0);"
+		"}";
+	const char* fragment_shader =
+		"#version 400\n"
+		"out vec4 frag_colour;"
+		"void main() {"
+		"  frag_colour = vec4(0.5, 0.0, 0.5, 1.0);"
+		"}";
+	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vs, 1, &vertex_shader, NULL);
+	glCompileShader(vs);
+	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fs, 1, &fragment_shader, NULL);
+	glCompileShader(fs);
+	GLuint shader_programme = glCreateProgram();
+	glAttachShader(shader_programme, fs);
+	glAttachShader(shader_programme, vs);
+	glLinkProgram(shader_programme);
 	while (true)
 	{
 		mainWindow.Update(0.f);
@@ -89,11 +149,57 @@ int main(void)
 		}
 
 		// Rendering
+
+
+
 		ImGui::Render();
 		glViewport(0, 0, mainWindow.m_width, mainWindow.m_height);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		/* graphics draw here */
+		if (input_mgr::IsHeld('K'))
+		{
+			//float points[] = {
+			//	0.5f,  0.0f,  0.0f,
+			//	0.75f, 0.0f,  0.0f,
+			//	0.5f,  0.25f,  0.0f,
+
+			//	0.0f,  0.0f,  0.0f,
+			//	0.0f,  0.0f,  0.0f,
+			//	0.0f,  0.0f,  0.0f
+			//};
+			//glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			//glBufferSubData(GL_ARRAY_BUFFER, 0,18 * sizeof(float), points);
+			//glBindBuffer(GL_ARRAY_BUFFER, 0);
+			num--;
+		}
+
+		if (input_mgr::IsHeld('L'))
+		{
+
+			//float points[] = {
+			//	0.0f,  0.0f,  0.0f,
+			//	0.25f, 0.0f,  0.0f,
+			//	0.0f, 0.25f,  0.0f,
+
+			//	0.5f,  0.0f,  0.0f,
+			//	0.75f, 0.0f,  0.0f,
+			//	0.5f,  0.25f,  0.0f
+			//};
+			//glBindBuffer(GL_ARRAY_BUFFER, vbo);
+			//glBufferSubData(GL_ARRAY_BUFFER, 0* sizeof(float),18* sizeof(float), points);
+			//glBindBuffer(GL_ARRAY_BUFFER, 0);
+			num++;
+		}
+		glUseProgram(shader_programme);
+		glBindVertexArray(vao);
+		glDrawArrays(GL_TRIANGLES, 0, num);
+
+		/* imgui draw here */
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+
 
 
 		SwapBuffers(mainWindow.hDC);
