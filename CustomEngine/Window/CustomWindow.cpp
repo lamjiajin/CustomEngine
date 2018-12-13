@@ -765,6 +765,7 @@ LRESULT CALLBACK GameWindow::GameWindowHandler(
 		RECT  temp = *((RECT*)lParam);
 		m_width = temp.right - temp.left;
 		m_height = temp.bottom - temp.top;
+		//glViewport(0, 0, m_width, m_height);
 		return 1;
 	}
 
@@ -775,22 +776,23 @@ LRESULT CALLBACK GameWindow::GameWindowHandler(
 			auto width = LOWORD(lParam);
 			auto height = HIWORD(lParam);
 			//std::cout << " wm size! " << "wparam :" << wParam << " width: " << width << " height: " << height << "\n";
+			
 			//if(GETSYSTEM(GraphicsManager))
 			//GETSYSTEM(GraphicsManager)->HandleResize(width, height);
 		}
-
+		break;
 	}
 
 	case WM_KEYDOWN:
 		input_mgr::keyboardMouse.currentKeys[wParam] = 1;
 
 
-	//	break;
+		return 0;
 
 	case WM_KEYUP:
 		input_mgr::keyboardMouse.currentKeys[wParam]  = 0;
 
-	//	break;
+		return 0;
 
 	case WM_SYSKEYDOWN:
 	{

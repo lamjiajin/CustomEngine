@@ -14,8 +14,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 /*****************************************************************************/
 #pragma once
 
-class Matrix3x3;
-class Vector3;
 
 class Quaternion
 {

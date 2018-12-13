@@ -229,19 +229,19 @@ void Keyboard::Update()
 	//	std::cout << "x: " << curr_mousePos.x << "y: " << curr_mousePos.y << std::endl;
 
 	std::copy(currentKeys, currentKeys + 256, prevKeys);
-	GetKeyboardState(currentKeys);
+	//GetKeyboardState(currentKeys);
 	
-	int num;
-	int j = 0;
-	for (int i = 0; i < MAX_KEYS; ++i) // this loops through keyboard only
+	//int num;
+	//int j = 0;
+	//for (int i = 0; i < MAX_KEYS; ++i) // this loops through keyboard only
 	{
-		currentKeys[i] &= HIGH_BIT;
-		currentKeys[i] /= 128;
-		anyKeyPressed = currentKeys[i] ? true : anyKeyPressed;
+		//currentKeys[i] &= HIGH_BIT;
+		//currentKeys[i] /= 128;
+		//anyKeyPressed = currentKeys[i] ? true : anyKeyPressed;
 
-		num = j + prevKeys[i] + 2 * currentKeys[i];
-		j += 4;
-		input_mgr::input_event_container[input_mgr::current_state][num](i);
+		//num = j + prevKeys[i] + 2 * currentKeys[i];
+		//j += 4;
+		//input_mgr::input_event_container[input_mgr::current_state][num](i);
 	}	
 }
 
@@ -514,7 +514,6 @@ short input_mgr::GetWheelDelta()
 void input_mgr::Update()
 {
 	// Update Windows
-	Keyboard::wheelDelta = 0;
 
 	if (active)
 	{

@@ -1,0 +1,19 @@
+8 
+4 
+7 
+victoria_downidle 
+0 3 
+victoria_downmove
+1 3 - 6 3
+victoria_leftidle
+0 2
+victoria_leftmove
+1 2 - 6 2
+victoria_upidle
+0 1
+victoria_upmove
+1 1 - 6 1
+victoria_rightidle
+0 0
+victoria_rightmove
+1 0 - 6 0

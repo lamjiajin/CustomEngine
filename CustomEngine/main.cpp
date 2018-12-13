@@ -1,202 +1,231 @@
-﻿#include <iostream>
-#include <vector>
-#include "Window/CustomWindow.h"
-#include "Input/Input.h"
-#include "gl/gl3w.h"
+﻿
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include "main.h"
 
-#include "imGUI/imgui.h"
-#include "imGUI/imgui_impl_win32.h"
-#include "imGUI/imgui_impl_opengl3.h"
 
-mat3 global_to_clip{1.f/40.f,0,0,1.f /40.f,0,0,0,0,1};
 
-struct square
+struct mousepos
 {
-	// vbo index - 
-	int vbo_index; 
-	float length = 1;
-	vec2 position{ 0,0 };
-	void init_color(std::vector<float>& color_data, vec3 color)
-	{
-		
-		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
-		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
-		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
-
-		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
-		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
-		color_data.push_back(color.x);	color_data.push_back(color.y);	color_data.push_back(color.z);
-
-	}
-
-	void init_graphics(std::vector<float>& point_data)
-	{
-		vbo_index = point_data.size();
-		float i = position.x / 20.f, j = position.y / 20.f;
-		float clip_length = length / 20.f;
-		point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
-		point_data.push_back(i + clip_length); point_data.push_back(j); point_data.push_back(0);
-		point_data.push_back(i + clip_length); point_data.push_back(j + clip_length); point_data.push_back(0);
-
-		point_data.push_back(i + clip_length); point_data.push_back(j + clip_length); point_data.push_back(0);
-		point_data.push_back(i); point_data.push_back(j + clip_length); point_data.push_back(0);
-		point_data.push_back(i); point_data.push_back(j); point_data.push_back(0);
-	}
-	void update_graphics(GLuint vbo)
-	{
-		float i = position.x / 20.f ;
-		float j = position.y / 20.f ;
-		float clip_length = length / 20.f;
-
-		float clip_data[18]{
-
-		i, j, 0,
-		i + clip_length, j, 0,
-		i + clip_length, j + clip_length, 0,
-
-		i + clip_length, j + clip_length, 0,
-		i, j + clip_length, 0,
-		i, j, 0,
-		};
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferSubData(GL_ARRAY_BUFFER, vbo_index * sizeof(float),18* sizeof(float), clip_data);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
+	int x, y;
 };
+
+void mouseclick(int x, int y)
+{
+	INPUT Inputs[3] = { 0 };
+
+	Inputs[0].type = INPUT_MOUSE;
+	Inputs[0].mi.dx = x; // desired X coordinate
+	Inputs[0].mi.dy = y; // desired Y coordinate
+	Inputs[0].mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+
+	Inputs[1].type = INPUT_MOUSE;
+	Inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+
+	Inputs[2].type = INPUT_MOUSE;
+	Inputs[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+
+	SendInput(3, Inputs, sizeof(INPUT));
+}
+
+
+struct tex_frame_coord
+{
+	vec2 data[6];
+};
+
+// animationdata can be Victoria
+struct animationdata
+{
+	// Victoria contain information on 'move left', 'move right' etc
+	// those are keys to the frame coords
+	std::unordered_map<std::string, std::vector<tex_frame_coord>> data;
+};
+
+struct animationsystem
+{
+	std::unordered_map<std::string, animationdata> animationCollection;
+};
+
+struct animationcomponent
+{
+	// start from 0
+	int current_frame;
+	float current_dt;
+
+};
+
+tex_frame_coord generateTexData(float curr_x, float curr_y, float max_col, float max_row)
+{
+	tex_frame_coord t;
+	t.data[0]={ curr_x/ max_col						, curr_y/ max_row };
+	t.data[1]={ curr_x/ max_col	+ 1.f / max_col		, curr_y/ max_row };
+	t.data[2]={ curr_x/ max_col + 1.f / max_col		, curr_y/ max_row + 1.f / max_row };
+	t.data[3]={ curr_x/ max_col + 1.f / max_col		, curr_y/ max_row + 1.f / max_row };
+	t.data[4]={ curr_x/ max_col						, curr_y/ max_row + 1.f / max_row };
+	t.data[5]={ curr_x/ max_col						, curr_y/ max_row };
+	return t;
+}
+
+// this function reads a sprite sheet and returns an animation data object
+animationdata readSpriteMetadata(const std::string& filename)
+{
+	animationdata res;
+	std::ifstream objectfile(filename);
+	if (objectfile.is_open())
+	{
+		// number of animations in this file
+		int num_of_animation;
+		objectfile >> num_of_animation;
+		//	objectfile.ignore((std::numeric_limits<std::streamsize>::max)(), '\n');
+
+		// number of rows in the spritesheet
+		int row;
+		objectfile >> row;	
+
+		// max number of columns, does not have to represent all rows' columns
+		int column;
+		objectfile >> column;	
+		
+		std::string animationname;
+		objectfile >> animationname;
+
+		for (int i = 0; i < num_of_animation; ++i)
+		{
+			res.data[animationname]; // creates the key in the data
+			vec2 framepos;
+			
+			objectfile >> framepos.x; 
+			objectfile >> framepos.y;
+			res.data[animationname].push_back(generateTexData(framepos.x, framepos.y, column, row));
+			
+			// this string is to check if we are to go to next animation or grab more frames
+			std::string check;
+			objectfile >> check;
+			if (check == "-")
+			{
+				vec2 endframepos;
+				objectfile >> endframepos.x;
+				objectfile >> endframepos.y; // no intention of dealing with sprites that span across multiple rows
+				// taking in all frame data
+				for (float j = framepos.x + 1; j <= endframepos.x; ++j)
+				{
+					res.data[animationname].push_back(generateTexData(j, endframepos.y, column, row));
+				}
+
+				// sets animationname to the actual next name
+				objectfile >> animationname;
+
+			}
+			else
+				animationname = check;
+		}
+	}
+	return res;
+}	
 
 int main(void)
 {
 	GameWindow mainWindow;	
-	mainWindow.init("FirstEngine",0,0,400,400);
+	mainWindow.init("FirstEngine",0,0,1600,900);
 	input_mgr::Init();
 	input_mgr::active = true;
+	FPSController::GetInstance().Init();
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 	ImGui_ImplWin32_Init(mainWindow.hwnd);
 	ImGui_ImplOpenGL3_Init();
 	// Setup style
 	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
 
-	// Load Fonts
-	// - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them. 
-	// - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple. 
-	// - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-	// - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-	// - Read 'misc/fonts/README.txt' for more instructions and details.
-	// - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-	//io.Fonts->AddFontDefault();
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-	//IM_ASSERT(font != NULL);
+
 
 	bool show_demo_window = true;
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	std::vector<float> point_data;
-	std::vector<float> color_data;
+
+	std::vector<vec3> point_data;
+	std::vector<vec2> texture_data;
+	std::vector<float> framenum_data;
 	
-	// static background
-	std::vector<square> arena;
-	{
-		for (int i = 0; i < 20; i++)
-		{
-			square mysq;
-			mysq.position.x = i * 2 - 20;
-			mysq.position.y = -20;
-			mysq.length = 2;
-			mysq.init_graphics(point_data);
-			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
-			arena.push_back(mysq);
-		}
-
-		for (int i = 0; i < 20; i++)
-		{
-			square mysq;
-			mysq.position.x = i * 2 - 20;
-			mysq.position.y = 18;
-			mysq.length = 2;
-			mysq.init_graphics(point_data);
-			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
-			arena.push_back(mysq);
-		}
-
-		for (int i = 1; i < 19; i++)
-		{
-			square mysq;
-			mysq.position.x = -20;
-			mysq.position.y = i * 2 - 20;
-			mysq.length = 2;
-			mysq.init_graphics(point_data);
-			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
-			arena.push_back(mysq);
-		}
-		for (int i = 1; i < 19; i++)
-		{
-			square mysq;
-			mysq.position.x = 18;
-			mysq.position.y = i * 2 - 20;
-			mysq.length = 2;
-			mysq.init_graphics(point_data);
-			mysq.init_color(color_data, vec3{ 0.5f, 0.0f, 0.3f });
-			arena.push_back(mysq);
-		}
-
-	}
-
-	// units
-	square herosq;
-	herosq.length = 3;
-	herosq.init_graphics(point_data);
-	herosq.init_color(color_data, vec3{ 0.7f,0.1f,0.2f });
-
-
-
-
-	int num = point_data.size() / 3;
-
-	GLuint pos_vbo = 0;
-	glGenBuffers(1, &pos_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
-	glBufferData(GL_ARRAY_BUFFER, point_data.size()*sizeof(float), point_data.data(), GL_STATIC_DRAW);
-
-	GLuint colours_vbo = 0;
-	glGenBuffers(1, &colours_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-	glBufferData(GL_ARRAY_BUFFER, color_data.size() * sizeof(float), color_data.data(), GL_STATIC_DRAW);
+	std::vector<GameObject> go_container;
+	
+	go_container.reserve(100);
 
 	GLuint vao = 0;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
+	
+	GLuint pos_vbo = 0;
+	glGenBuffers(1, &pos_vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL); 
-	glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glBufferData(GL_ARRAY_BUFFER, point_data.size() * sizeof(vec3), point_data.data(), GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(0);
+
+	GLuint texture_vbo = 0;
+	glGenBuffers(1, &texture_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, texture_vbo);
+	glBufferData(GL_ARRAY_BUFFER, texture_data.size() * sizeof(vec2), texture_data.data(), GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(1);
+
+	GLuint framenum_vbo = 0;
+	glGenBuffers(1, &framenum_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, framenum_vbo);
+	glBufferData(GL_ARRAY_BUFFER, framenum_data.size() * sizeof(float), framenum_data.data(), GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(2);
+
+	// load and create a texture 
+	// -------------------------
+	unsigned int texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+										   // set the texture wrapping parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// set texture filtering parameters
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// load image, create texture and generate mipmaps
+	int width, height, nrChannels;
+	// The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char *data = stbi_load("idle.png", &width, &height, &nrChannels, STBI_rgb_alpha);
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
+	//readSpriteMetadata("VictoriaSpritesheet-Alpha.txt");
+
 
 	const char* vertex_shader =
 		"#version 400\n"
 		"layout(location = 0) in vec3 vp;"
-		"layout(location = 1) in vec3 vertex_colour;"
-		"out vec3 colour;"
+		"layout(location = 1) in vec2 aTexCoord;"
+		"layout(location = 2) in float framenum;"
+		"out vec2 TexCoord;"
 		"void main() {"
-		"  colour = vertex_colour;"
-		"  gl_Position = vec4(vp, 1.0);"
+		"gl_Position = vec4(vp, 1.0);"
+		"TexCoord = aTexCoord;"
+		"TexCoord.x = TexCoord.x + framenum / 8.f;"
 		"}";
 	const char* fragment_shader =
 		"#version 400\n"
-		"in vec3 colour;"
+		"in vec2 TexCoord;"
 		"out vec4 frag_colour;"
+		"uniform sampler2D ourTexture;"
 		"void main() {"
-		"  frag_colour = vec4(colour, 1.0);"
+		"frag_colour = texture(ourTexture, TexCoord);"
 		"}";
 
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -210,10 +239,16 @@ int main(void)
 	glAttachShader(shader_programme, vs);
 	// insert location binding code here
 	glBindAttribLocation(shader_programme, 0, "vp");
-	glBindAttribLocation(shader_programme, 1, "vertex_colour");
+	glBindAttribLocation(shader_programme, 1, "aTexCoord");
+	glBindAttribLocation(shader_programme, 2, "framenum");
 	glLinkProgram(shader_programme);
+
+	
+	int state = 0;
 	while (true)
 	{
+		FPSController::GetInstance().Start();
+		float dt = FPSController::GetInstance().GetFrameTime();
 		mainWindow.Update(0.f);
 		input_mgr::Update();
 
@@ -223,26 +258,63 @@ int main(void)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		/* graphics draw here */
+		float x = input_mgr::GetMouseX();
+		float y = input_mgr::GetMouseY();
 
-		if (input_mgr::IsHeld(Key::W))
-			herosq.position.y++;
-		if (input_mgr::IsHeld(Key::A))
-			herosq.position.x--;
-		if (input_mgr::IsHeld(Key::S))
-			herosq.position.y--;
-		if (input_mgr::IsHeld(Key::D))
-			herosq.position.x++;
+		vec3 mouse_pos{ x,y,1 };
+		mat3 m{ 1, 0 , -800 , 0 ,-1, 430, 0, 0, 1 };
+		//m.Inverse();
+		mouse_pos = m * mouse_pos;
 
 
-		herosq.update_graphics(pos_vbo);
+		// character control
+		bool changeframe = false;
+		int movement = false;
 
+
+		// graphics update
+		static float framenum = 0;
+		static float frametime = 0;
+
+		
+		frametime += dt / 1000.f;
+
+		if (frametime >= 0.125f)
+		{
+			frametime = 0;
+
+			++framenum;
+			if (framenum > 7.f)
+			{
+				framenum = 0;
+			}
+		}
+
+		
+		for (int i = 0; i < go_container.size(); ++i)
+		{
+			go_container[i].update(dt);
+
+			std::vector<float> data;
+			for (auto&elem : go_container[i].grph.textvertices[0])
+			{
+				data.push_back(framenum);
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, framenum_vbo);
+			glBufferSubData(GL_ARRAY_BUFFER, go_container[i].grph.frame_index * sizeof(float), data.size() * sizeof(float), data.data());
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		// bind Texture
+		glBindTexture(GL_TEXTURE_2D, texture);
 		glUseProgram(shader_programme);
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, num);
 
-
-
-
+		// pass in the number of points
+		int number_of_vertices = point_data.size();
+		glDrawArrays(GL_TRIANGLES, 0, number_of_vertices);
 
 
 		static bool imgui_active = true;
@@ -256,59 +328,98 @@ int main(void)
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
-			// 1. Show a simple window.
-			// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
+
 			{
-				static float f = 0.0f;
-				static int counter = 0;
-				ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-				ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-				ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+				ImGui::InputInt("movement", &movement);
+				ImGui::InputFloat("frametime:", &framenum);
+				ImGui::InputFloat("frametime:", &frametime);
+				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", dt, 1000.f/dt);
+				ImGui::Text("Point data's size: %d", point_data.size());
+				if (ImGui::Button("New Object!"))
+				{
+					go_container.push_back({});
+					auto& go = go_container.back();
+					go.position.x = 0;
+					go.grph.owner = &go;
+					go.grph.scale = { 120,120 };
 
-				ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
-				ImGui::Checkbox("Another Window", &show_another_window);
+					go.grph.vbo = pos_vbo;
 
-				if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-					counter++;
-				ImGui::SameLine();
-				ImGui::Text("counter = %d", counter);
+					// this function call will set the vertices data on screen space
+					go.grph.init(point_data, 2);
 
-				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+					glBindBuffer(GL_ARRAY_BUFFER, pos_vbo);
+					glBufferData(GL_ARRAY_BUFFER, point_data.size() * sizeof(vec3), point_data.data(), GL_DYNAMIC_DRAW);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+					go.grph.texture_vbo = texture_vbo;
+					
+					// global data - needs this for the ONE vbo 
+					texture_data.push_back({ 0, 0 });
+					texture_data.push_back({ 1.f/8.f, 0 });
+					texture_data.push_back({ 1.f/8.f,1.f });
+					texture_data.push_back({ 1.f/8.f,1.f });
+					texture_data.push_back({ 0, 1.f });
+					texture_data.push_back({ 0, 0 });
+
+					// local data - need this to reset back data
+					go.grph.textvertices[0].push_back({ 0, 0 });
+					go.grph.textvertices[0].push_back({ 1.f / 8.f, 0 });
+					go.grph.textvertices[0].push_back({ 1.f / 8.f,1.f });
+					go.grph.textvertices[0].push_back({ 1.f / 8.f,1.f });
+					go.grph.textvertices[0].push_back({ 0, 1.f });
+					go.grph.textvertices[0].push_back({ 0, 0 });
+					
+
+					glBindBuffer(GL_ARRAY_BUFFER, texture_vbo);
+					glBufferData(GL_ARRAY_BUFFER, texture_data.size() * sizeof(vec2), texture_data.data(), GL_DYNAMIC_DRAW);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+					go.grph.frame_index = framenum_data.size();
+					for (int i = 0; i < 8; ++i)
+					{
+						framenum_data.push_back(0);
+					}
+
+					glBindBuffer(GL_ARRAY_BUFFER, framenum_vbo);
+					glBufferData(GL_ARRAY_BUFFER, framenum_data.size() * sizeof(float), framenum_data.data(), GL_DYNAMIC_DRAW);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+				}
+				for (int i = 0; i < go_container.size(); ++i)
+				{
+					auto&elem = go_container[i];
+					ImGui::PushID(i);
+					ImGui::Text("Object");
+					ImGui::SliderFloat("pos x", &elem.position.x,-800,800);
+					ImGui::SliderFloat("pos y", &elem.position.y, -430, 430);
+					ImGui::PopID();
+				}		
 			}
 
-			// 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-			if (show_another_window)
-			{
-				ImGui::Begin("Another Window", &show_another_window);
-				ImGui::Text("Hello from another window!");
-				if (ImGui::Button("Close Me"))
-					show_another_window = false;
-				ImGui::End();
-			}
-
-			// 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-			if (show_demo_window)
-			{
-				ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-				ImGui::ShowDemoWindow(&show_demo_window);
-			}
-
-			// Rendering
-
-
-
+			
 			ImGui::Render();
 
-
+			
 			/* imgui draw here */
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 		
 		SwapBuffers(mainWindow.hDC);
+
+		FPSController::GetInstance().End();
 	}
+	// delete graphics buffers?
+
 	// Cleanup
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 	return 1;
+}
+
+
+ void GameObject::update(float dt)
+{
+	grph.update();
 }

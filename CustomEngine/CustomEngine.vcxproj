@@ -122,7 +122,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="extern\gl\gl3w.c" />
+    <ClCompile Include="FPS\FPSController.cpp" />
+    <ClCompile Include="Graphics\graphicscomponent.cpp" />
     <ClCompile Include="Graphics\opengl_3.cpp" />
+    <ClCompile Include="Graphics\physics.cpp" />
     <ClCompile Include="ImGUI\imgui.cpp" />
     <ClCompile Include="ImGUI\imgui_demo.cpp" />
     <ClCompile Include="ImGUI\imgui_draw.cpp" />
@@ -140,7 +143,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extern\gl\gl3w.h" />
+    <ClInclude Include="FPS\FPSController.h" />
     <ClInclude Include="glext\wglext.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="ImGUI\imconfig.h" />
     <ClInclude Include="ImGUI\imgui.h" />
     <ClInclude Include="ImGUI\imgui_impl_opengl3.h" />

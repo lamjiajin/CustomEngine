@@ -12,9 +12,7 @@ Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
 /*****************************************************************************/
-//#include "SoulEngine.h"
 #include "MathInc.h"
-#include <utility>
 
 Matrix3x3::Matrix3x3(const Vector3& r0, const Vector3& r1, const Vector3& r2)
 {
@@ -38,7 +36,7 @@ Matrix3x3 & Matrix3x3::operator*=(const Matrix3x3 & m)
 	return *this;
 }
 
-inline Matrix3x3 Matrix3x3::operator*(const Matrix3x3 & m) const
+ Matrix3x3 Matrix3x3::operator*(const Matrix3x3 & m) const
 {
 	Matrix3x3 temp(*this);
 	temp *= m;

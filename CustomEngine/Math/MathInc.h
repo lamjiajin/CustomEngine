@@ -20,13 +20,15 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #define PI_OVER4 0.7853981633974483f
 #define TWO_PI 6.283185307179586f
 
+#include <memory.h>  
+#include <algorithm>
+#include <limits>
+#include <iostream>
+#include <utility>
+
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix3x3.h"
 #include "Matrix4x4.h"
 #include "Quaternion.h"
-#include <memory.h>  
-#include <algorithm>
-#include <limits>
-#include <iostream>
